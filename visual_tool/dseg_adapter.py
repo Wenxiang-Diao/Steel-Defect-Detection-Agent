@@ -46,7 +46,7 @@ def preprocess_image(image_path: str):
 
     return image_tensor, original_width, original_height
 
-def predict_masks(image_path: str, threshold: float = 0.5):
+def predict_masks(image_path: str):
     image_tensor, original_width, original_height = preprocess_image(image_path)
     model.eval()
 
