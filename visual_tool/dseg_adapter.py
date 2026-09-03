@@ -22,6 +22,12 @@ BACKBONE_WEIGHT_PATH = (
 sys.path.insert(0, str(DSEG_MODELS_DIR))
 sys.path.insert(0, str(DSEG_DIR))
 
+NEU_CLASS_NAMES = {
+    0: "inclusion",
+    1: "patch",
+    2: "scratch",
+}
+
 from proposed_models.Transformer_based import Transformer_based
 from NEU_dataloaders import get_transforms
 
@@ -32,7 +38,18 @@ model.eval()
 
 def preprocess_image(image_path: str):
     image_path = Path(image_path)
-    image = cv2.imread(image_path)
+
+    if not image_path.is_file():
+        raise FileNotFoundError(
+            f"找不到输入图片：{image_path}"
+        )
+
+    image = cv2.imread(str(image_path))
+
+    if image is None:
+        raise ValueError(
+            f"图片无法读取：{image_path}"
+        )
     original_height, original_width = image.shape[:2]
 
     transforms = get_transforms(phase="test", mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
@@ -68,3 +85,111 @@ def predict_masks(image_path: str):
         "original_width": original_width,
         "original_height": original_height,
     }
+
+def postprocess_masks(
+    image_path: str,
+    masks: np.ndarray,
+    original_width: int,
+    original_height: int
+):
+    defects = []
+
+    # 用于计算所有缺陷的并集，防止不同类别重叠时重复计算。
+    overall_mask = np.zeros(
+        (original_height, original_width),
+        dtype=np.uint8,
+    )
+
+    for channel_index, defect_name in NEU_CLASS_NAMES.items():
+        model_mask = masks[channel_index]
+
+        # 将 256×256 mask 恢复到原始图片尺寸。
+        original_size_mask = cv2.resize(
+            model_mask,
+            (original_width, original_height),
+            interpolation=cv2.INTER_NEAREST,
+        )
+
+        original_size_mask = (
+            original_size_mask > 0
+        ).astype(np.uint8)
+
+        defect_pixel_count = int(
+            original_size_mask.sum()
+        )
+
+        total_pixel_count = (
+            original_width * original_height
+        )
+
+        area_ratio = (
+            defect_pixel_count / total_pixel_count
+        )
+
+        # 找出 mask 中所有缺陷像素的位置。
+        y_coordinates, x_coordinates = np.where(original_size_mask > 0)
+
+        if len(x_coordinates) == 0:
+            continue
+
+        x_min = int(x_coordinates.min())
+        y_min = int(y_coordinates.min())
+        x_max = int(x_coordinates.max())
+        y_max = int(y_coordinates.max())
+
+        defects.append(
+            {
+                "defect_type": defect_name,
+                "class_id": channel_index + 1,
+                "area_ratio": round(area_ratio, 6),
+                "location": {
+                    "bbox_pixels": {
+                        "x_min": x_min,
+                        "y_min": y_min,
+                        "x_max": x_max,
+                        "y_max": y_max,
+                    }
+                },
+            }
+        )
+
+        # 加入所有缺陷 mask 的并集。
+        overall_mask = np.maximum(
+            overall_mask,
+            original_size_mask,
+        )
+
+    overall_area_ratio = (
+        float(overall_mask.sum())
+        / (original_width * original_height)
+    )
+
+    return {
+        "image_path": str(Path(image_path).resolve()),
+        "image_width": original_width,
+        "image_height": original_height,
+        "has_defect": len(defects) > 0,
+        "overall_area_ratio": round(
+            overall_area_ratio,
+            6,
+        ),
+        "defects": defects,
+        "model_name": "dseg-NEU-ResT-S-UPerHead",
+    }
+
+def inspect_steel_image(image_path: str):
+    prediction = predict_masks(image_path)
+
+    result = postprocess_masks(
+        image_path=image_path,
+        masks=prediction["masks"],
+        original_width=prediction["original_width"],
+        original_height=prediction["original_height"],
+    )
+
+    return result
+
+
+results = inspect_steel_image("test_1.jpg")
+print(results)
+
