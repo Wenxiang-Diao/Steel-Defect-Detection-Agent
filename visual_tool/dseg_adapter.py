@@ -6,19 +6,11 @@ import numpy as np
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
-DSEG_DIR = (
-    PROJECT_ROOT
-    / "dseg_models-main"
-    / "dseg_models-main"
-)
+DSEG_DIR = PROJECT_ROOT / "dseg_models-main" / "dseg_models-main"
 DSEG_MODELS_DIR = DSEG_DIR / "models"
 
-BACKBONE_WEIGHT_PATH = (
-    DSEG_DIR
-    / "pretrained_weights"
-    / "cpt"
-    / "rest_small.pth"
-)
+BACKBONE_WEIGHT_PATH = DSEG_DIR / "pretrained_weights" / "cpt" / "rest_small.pth"
+UPERHEAD_WEIGHT_PATH = DSEG_DIR / "pretrained_weights" / "cpt" / "NEU_ResT_S_UperHead_light.pth"
 sys.path.insert(0, str(DSEG_MODELS_DIR))
 sys.path.insert(0, str(DSEG_DIR))
 
@@ -31,25 +23,22 @@ NEU_CLASS_NAMES = {
 from proposed_models.Transformer_based import Transformer_based
 from NEU_dataloaders import get_transforms
 
-net = Transformer_based('ResT-S')
-net.init_pretrained(str(BACKBONE_WEIGHT_PATH))
-model = net
+#net = Transformer_based('ResT-S')
+#net.init_pretrained(str(BACKBONE_WEIGHT_PATH))
+#model = net
+#model.eval()
+device = torch.device(
+    "cuda" if torch.cuda.is_available() else "cpu"
+)
+checkpoint = torch.load(UPERHEAD_WEIGHT_PATH, map_location=device)
+model = Transformer_based('ResT-S')
+model.load_state_dict(checkpoint["state_dict"], strict=True)
+model.to(device)
 model.eval()
 
 def preprocess_image(image_path: str):
     image_path = Path(image_path)
-
-    if not image_path.is_file():
-        raise FileNotFoundError(
-            f"找不到输入图片：{image_path}"
-        )
-
     image = cv2.imread(str(image_path))
-
-    if image is None:
-        raise ValueError(
-            f"图片无法读取：{image_path}"
-        )
     original_height, original_width = image.shape[:2]
 
     transforms = get_transforms(phase="test", mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
