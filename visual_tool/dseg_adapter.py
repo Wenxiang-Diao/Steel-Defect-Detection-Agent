@@ -1,6 +1,7 @@
 import sys
 from pathlib import Path
 import torch
+import json
 import cv2
 import numpy as np
 
@@ -166,6 +167,7 @@ def postprocess_masks(
         "model_name": "dseg-NEU-ResT-S-UPerHead",
     }
 
+# 单张图片检测
 def inspect_steel_image(image_path: str):
     prediction = predict_masks(image_path)
 
@@ -178,7 +180,58 @@ def inspect_steel_image(image_path: str):
 
     return result
 
+# 文件夹检测
+def inspect_steel_folder(
+    input_folder: str,
+    result_folder: str,
+):
+    input_folder = Path(input_folder)
+    result_folder = Path(result_folder)
 
-results = inspect_steel_image("test_1.jpg")
-print(results)
+    image_paths = sorted(path for path in input_folder.iterdir())
+
+    batch_results = []
+
+    print(f"共找到 {len(image_paths)} 张图片")
+
+    for index, image_path in enumerate(image_paths, start=1):
+        print(
+            f"[{index}/{len(image_paths)}] "
+            f"正在检测：{image_path.name}"
+        )
+        visual_result = inspect_steel_image(str(image_path))
+        output_data = {
+            "success": True,
+            **visual_result,
+        }
+
+        output_path = (result_folder / f"{image_path.stem}_visual.json"
+        )
+
+        output_path.write_text(
+            json.dumps(
+                output_data,
+                ensure_ascii=False,
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+
+        batch_results.append(
+            output_data
+        )
+
+        print(
+            f"检测结果已保存：{output_path}"
+        )
+
+    print(
+        f"批量检测完成，结果目录："
+        f"{result_folder.resolve()}"
+    )
+
+    return batch_results
+
+#results = inspect_steel_image("inputs/test_1.jpg")
+results = inspect_steel_folder(input_folder="inputs", result_folder="results")
 
