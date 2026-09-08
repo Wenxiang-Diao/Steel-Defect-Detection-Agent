@@ -1,32 +1,48 @@
 {
-  "inclusion": {
-    "defect_levels": {
-      "low": "面积占比小于1%",
-      "medium": "面积占比为1%至5%",
-      "high": "面积占比大于5%"
+  "version": "coverage-003",
+  "scope": "表面图像覆盖程度评价；阈值为系统配置，不是国家标准限值或产品合格认证。",
+  "metric": "同类预测像素占整张图片的比例；不同类别不相加。",
+  "bands": [
+    {
+      "id": "low",
+      "min": 0,
+      "max": 0.01,
+      "include_min": false,
+      "include_max": false,
+      "recommendation": "PASS",
+      "review_reason": "",
+      "action": "记录类别、位置和面积比例。"
     },
-    "allowed_range": "第一版演示规则中，仅低等级缺陷可以进入人工确认后的暂时接受流程。",
-    "treatment": "记录缺陷位置并人工复检，必要时进行无损检测，根据缺陷深度决定修磨、返修或报废。",
-    "manual_review_conditions": "面积占比达到1%以上、无法确定缺陷深度、规则资料不足或模型结果与原图不一致时需要人工复核。"
-  },
-  "patch": {
-    "defect_levels": {
-      "low": "面积占比小于1%",
-      "medium": "面积占比为1%至5%",
-      "high": "面积占比大于5%"
+    {
+      "id": "medium",
+      "min": 0.01,
+      "max": 0.05,
+      "include_min": true,
+      "include_max": true,
+      "recommendation": "REVIEW",
+      "review_reason": "面积处于1%至5%（含边界），需对照原图核对类别及标记范围。",
+      "action": "人工核对类别及标记范围，必要时更正或重新检测。"
     },
-    "allowed_range": "patch不是明确的标准缺陷名称，系统不能仅根据面积占比自动判断是否允许。",
-    "treatment": "人工确认具体缺陷类型，并检查是否存在氧化铁皮压入、剥落、麻点、重皮或裂纹。",
-    "manual_review_conditions": "所有patch检测结果均建议人工复核；面积占比达到1%以上时必须人工复核。"
-  },
-  "scratch": {
-    "defect_levels": {
-      "low": "面积占比小于1%",
-      "medium": "面积占比为1%至5%",
-      "high": "面积占比大于5%"
+    {
+      "id": "high",
+      "min": 0.05,
+      "max": 1,
+      "include_min": false,
+      "include_max": true,
+      "recommendation": "FAIL",
+      "review_reason": "",
+      "action": "标记覆盖比例超限，列入待处理清单。"
+    }
+  ],
+  "classes": {
+    "inclusion": {
+      "rule_id": "quality-inclusion-003"
     },
-    "allowed_range": "低等级划伤可以进入人工确认后的暂时接受流程，最终结果还需要结合划伤深度和产品要求。",
-    "treatment": "记录划伤位置和范围，测量划伤深度；轻微划伤可局部修磨，较深或连续划伤应隔离复检。",
-    "manual_review_conditions": "面积占比达到1%以上、无法测量深度、划伤连续范围较大或修磨后剩余厚度未知时需要人工复核。"
+    "patch": {
+      "rule_id": "quality-patch-003"
+    },
+    "scratch": {
+      "rule_id": "quality-scratch-003"
+    }
   }
 }
