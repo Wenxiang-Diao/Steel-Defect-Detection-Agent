@@ -1,5 +1,5 @@
 {
-  "version": "coverage-003",
+  "version": "coverage",
   "scope": "表面图像覆盖程度评价；阈值为系统配置，不是国家标准限值或产品合格认证。",
   "metric": "同类预测像素占整张图片的比例；不同类别不相加。",
   "bands": [
@@ -30,19 +30,19 @@
       "include_min": false,
       "include_max": true,
       "recommendation": "FAIL",
-      "review_reason": "",
-      "action": "标记覆盖比例超限，列入待处理清单。"
+      "review_reason": "预测缺陷覆盖比例超过5%，需对照原图核验类别和标记范围，确认是否存在大面积误检。",
+      "action": "标记覆盖比例超限，需要人工审核确认留痕。"
     }
   ],
   "classes": {
     "inclusion": {
-      "rule_id": "quality-inclusion-003"
+      "rule_id": "quality-inclusion"
     },
     "patch": {
-      "rule_id": "quality-patch-003"
+      "rule_id": "quality-patch"
     },
     "scratch": {
-      "rule_id": "quality-scratch-003"
+      "rule_id": "quality-scratch"
     }
   }
 }

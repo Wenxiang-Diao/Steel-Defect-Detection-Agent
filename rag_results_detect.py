@@ -16,7 +16,6 @@ def _matches(area, band):
 
 
 def retrieve_rag_entries(visual_result):
-    """按类别检索知识，按面积只返回命中的等级和处理规则。"""
     if not isinstance(visual_result, dict):
         raise TypeError("需要单张图片的视觉结果字典")
     defects = visual_result.get("defects")

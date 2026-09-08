@@ -24,6 +24,8 @@ def save_reviewed_report(
 
     final_report = {
         "report_id": report_id,
+        "image_id": agent_result.get("image_id"),
+        "original_name": agent_result.get("original_name"),
         "created_at": datetime.now().isoformat(),
         "visual_result": agent_result["visual_result"],
         "rag_entries": agent_result["rag_entries"],
