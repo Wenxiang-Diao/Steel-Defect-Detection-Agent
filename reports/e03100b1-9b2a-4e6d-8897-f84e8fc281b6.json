@@ -1,0 +1,299 @@
+{
+  "report_id": "e03100b1-9b2a-4e6d-8897-f84e8fc281b6",
+  "created_at": "2026-09-08T09:47:07.276214",
+  "visual_result": {
+    "image_path": "C:\\Users\\diaow\\AppData\\Local\\Temp\\tmphcazks69.jpg",
+    "image_width": 3264,
+    "image_height": 1813,
+    "has_defect": true,
+    "overall_area_ratio": 0.013466,
+    "defects": [
+      {
+        "defect_type": "patch",
+        "class_id": 2,
+        "area_ratio": 0.013263,
+        "location": {
+          "bbox_pixels": {
+            "x_min": 1135,
+            "y_min": 652,
+            "x_max": 1976,
+            "y_max": 1168
+          }
+        }
+      },
+      {
+        "defect_type": "scratch",
+        "class_id": 3,
+        "area_ratio": 0.000202,
+        "location": {
+          "bbox_pixels": {
+            "x_min": 1084,
+            "y_min": 1034,
+            "x_max": 1555,
+            "y_max": 1118
+          }
+        }
+      }
+    ],
+    "model_name": "dseg-NEU-ResT-S-UPerHead"
+  },
+  "rag_entries": [
+    {
+      "defect_type": "patch",
+      "defect_knowledge": {
+        "rule_id": "knowledge-patch-002",
+        "dataset_label": "patch",
+        "name": "斑块",
+        "definition": "NEU-Seg的斑块类表面缺陷，指图像中与周围钢材背景存在灰度或纹理差异的连续片状、块状异常区域。",
+        "visual_features": [
+          "连续片状或块状区域",
+          "轮廓不规则，局部灰度或纹理发生变化"
+        ],
+        "possible_causes": [
+          "可能与氧化、表面接触或加工引起的局部表面状态变化有关，类别本身不能确定具体成因"
+        ],
+        "similar_defects_difference": "与scratch相比通常更宽且方向性较弱；与inclusion相比常呈连续片状。形态可能重叠，不能仅凭面积区分。",
+        "interpretation_rules": [
+          "视觉特征和可能成因是类别知识，不代表已在当前图片中逐项测量或确认。",
+          "当前样本只引用模型返回的类别、面积占比和位置；不得把外观知识写成已验证的生产原因。",
+          "位置框表示该类别全部预测像素的包围范围，不表示单个缺陷实例；不得据此推断实际长度、宽度或数量。"
+        ],
+        "source_type": "按NEU-Seg类别组织的表面外观知识"
+      },
+      "quality_rule": {
+        "rule_id": "quality-patch-002",
+        "defect_type": "patch",
+        "rule_scope": "表面图像缺陷覆盖程度评价",
+        "threshold_basis": "系统配置的图像面积占比阈值，尚未经带质检结论的验证集校准，不引用国家标准限值。",
+        "decision_scope": "PASS和FAIL仅表示当前图像在本规则下的面积覆盖评价，不表示整件钢材的产品合格认证。",
+        "required_fields": [
+          "defect_type",
+          "area_ratio"
+        ],
+        "measurement_definition": "area_ratio为该类别预测缺陷像素数除以整张输入图像像素数，取值为0到1；0.01表示1%。同类多个区域合并计算。",
+        "input_scope": "适用于NEU类别表面图像；比较不同图片时应保持取景范围和裁剪方式一致。改变取景会改变面积比例。",
+        "severity_rules": [
+          {
+            "level": "low",
+            "min_exclusive": 0,
+            "max_exclusive": 0.01,
+            "condition": "0 < area_ratio < 0.01"
+          },
+          {
+            "level": "medium",
+            "min_inclusive": 0.01,
+            "max_inclusive": 0.05,
+            "condition": "0.01 <= area_ratio <= 0.05"
+          },
+          {
+            "level": "high",
+            "min_exclusive": 0.05,
+            "max_inclusive": 1,
+            "condition": "0.05 < area_ratio <= 1"
+          }
+        ],
+        "decision_rules": {
+          "low": {
+            "recommendation": "PASS",
+            "manual_review_required": false,
+            "description": "覆盖比例较低，满足本图像面积规则。"
+          },
+          "medium": {
+            "recommendation": "REVIEW",
+            "manual_review_required": true,
+            "description": "覆盖比例处于复核区间，人工对照原图和标记位置核对类别及范围。"
+          },
+          "high": {
+            "recommendation": "FAIL",
+            "manual_review_required": false,
+            "description": "覆盖比例超过本图像面积规则上限，给出不通过建议。"
+          }
+        },
+        "allowed_range": "0 < area_ratio < 0.01为通过区间；0.01至0.05（含边界）为复核区间；大于0.05为不通过区间。",
+        "treatment_by_level": {
+          "low": "记录斑块位置和面积比例，保留图像评价建议。",
+          "medium": "对照原图核对斑块类别与标记范围，发现误检或漏标时更正结果或重新检测，再确认评价。",
+          "high": "标记斑块覆盖超限，列入待处理清单；本规则不直接决定修磨、返修或报废。"
+        },
+        "manual_review_conditions": [
+          {
+            "condition": "0.01 <= area_ratio <= 0.05",
+            "reason": "覆盖比例处于复核区间，核对原图中的类别和标记范围。"
+          },
+          {
+            "condition": "area_ratio缺失、非有限数值、布尔值、小于等于0或大于1",
+            "reason": "缺陷条目的面积数据无效，不能分级。"
+          },
+          {
+            "condition": "视觉检测失败、缺陷类别未知、知识或规则缺失或冲突",
+            "reason": "输入或依据不完整，不能形成可靠评价。"
+          },
+          {
+            "condition": "has_defect与defects列表矛盾",
+            "reason": "有无缺陷标志与明细不一致，应检查视觉结果。"
+          }
+        ],
+        "interpretation_rules": [
+          "三种类别使用同一覆盖程度规则；不因类别为patch单独触发复核。",
+          "本评价仅依赖类别和面积比例，不以未提供的物理测量或置信度作为复核条件。",
+          "低中高表示图像覆盖程度，不表示结构损伤程度或服役风险。",
+          "不将不同类别的area_ratio相加；类别掩膜可能重叠。overall_area_ratio为并集比例，仅作展示，不用于本分类阈值。",
+          "所有条件文字用于规则说明，不是可直接执行的Python表达式。"
+        ],
+        "aggregation_rules": {
+          "recommendation": "先检查输入与规则有效性；任一项无效或需复核则总体REVIEW，否则任一类别FAIL则总体FAIL，否则总体PASS。",
+          "manual_review_required": "任一缺陷需要复核或输入与规则无效时为true，否则为false。",
+          "no_defect": "检测成功且has_defect=false、defects=[]、overall_area_ratio=0时，返回图像规则PASS，说明未检出目标类别，不能宣称产品完全无缺陷。"
+        },
+        "human_confirmation_required": true,
+        "confirmation_definition": "正式记录由质检员确认；常规确认不等于因证据问题触发的额外人工复核。"
+      },
+      "matched": true
+    },
+    {
+      "defect_type": "scratch",
+      "defect_knowledge": {
+        "rule_id": "knowledge-scratch-002",
+        "dataset_label": "scratch",
+        "name": "划伤",
+        "definition": "模型识别为划伤的线状表面异常，典型外观为沿一定方向延伸的细长痕迹。",
+        "visual_features": [
+          "细长线状，通常具有方向性",
+          "可能为单条或多条线状痕迹"
+        ],
+        "possible_causes": [
+          "可能与辊道、导向装置、搬运或加工过程中的机械接触和摩擦有关"
+        ],
+        "similar_defects_difference": "scratch通常呈细长线状；patch通常呈较宽片状；inclusion常见点状或颗粒状。",
+        "interpretation_rules": [
+          "视觉特征和可能成因是类别知识，不代表已在当前图片中逐项测量或确认。",
+          "当前样本只引用模型返回的类别、面积占比和位置；不得把外观知识写成已验证的生产原因。",
+          "位置框表示该类别全部预测像素的包围范围，不表示单个缺陷实例；不得据此推断实际长度、宽度或数量。"
+        ],
+        "source_type": "按NEU-Seg类别组织的表面外观知识"
+      },
+      "quality_rule": {
+        "rule_id": "quality-scratch-002",
+        "defect_type": "scratch",
+        "rule_scope": "表面图像缺陷覆盖程度评价",
+        "threshold_basis": "系统配置的图像面积占比阈值，尚未经带质检结论的验证集校准，不引用国家标准限值。",
+        "decision_scope": "PASS和FAIL仅表示当前图像在本规则下的面积覆盖评价，不表示整件钢材的产品合格认证。",
+        "required_fields": [
+          "defect_type",
+          "area_ratio"
+        ],
+        "measurement_definition": "area_ratio为该类别预测缺陷像素数除以整张输入图像像素数，取值为0到1；0.01表示1%。同类多个区域合并计算。",
+        "input_scope": "适用于NEU类别表面图像；比较不同图片时应保持取景范围和裁剪方式一致。改变取景会改变面积比例。",
+        "severity_rules": [
+          {
+            "level": "low",
+            "min_exclusive": 0,
+            "max_exclusive": 0.01,
+            "condition": "0 < area_ratio < 0.01"
+          },
+          {
+            "level": "medium",
+            "min_inclusive": 0.01,
+            "max_inclusive": 0.05,
+            "condition": "0.01 <= area_ratio <= 0.05"
+          },
+          {
+            "level": "high",
+            "min_exclusive": 0.05,
+            "max_inclusive": 1,
+            "condition": "0.05 < area_ratio <= 1"
+          }
+        ],
+        "decision_rules": {
+          "low": {
+            "recommendation": "PASS",
+            "manual_review_required": false,
+            "description": "覆盖比例较低，满足本图像面积规则。"
+          },
+          "medium": {
+            "recommendation": "REVIEW",
+            "manual_review_required": true,
+            "description": "覆盖比例处于复核区间，人工对照原图和标记位置核对类别及范围。"
+          },
+          "high": {
+            "recommendation": "FAIL",
+            "manual_review_required": false,
+            "description": "覆盖比例超过本图像面积规则上限，给出不通过建议。"
+          }
+        },
+        "allowed_range": "0 < area_ratio < 0.01为通过区间；0.01至0.05（含边界）为复核区间；大于0.05为不通过区间。",
+        "treatment_by_level": {
+          "low": "记录划伤位置和面积比例，保留图像评价建议。",
+          "medium": "对照原图核对划伤类别与标记范围，发现误检或漏标时更正结果或重新检测，再确认评价。",
+          "high": "标记划伤覆盖超限，列入待处理清单；本规则不直接决定修磨、返修或报废。"
+        },
+        "manual_review_conditions": [
+          {
+            "condition": "0.01 <= area_ratio <= 0.05",
+            "reason": "覆盖比例处于复核区间，核对原图中的类别和标记范围。"
+          },
+          {
+            "condition": "area_ratio缺失、非有限数值、布尔值、小于等于0或大于1",
+            "reason": "缺陷条目的面积数据无效，不能分级。"
+          },
+          {
+            "condition": "视觉检测失败、缺陷类别未知、知识或规则缺失或冲突",
+            "reason": "输入或依据不完整，不能形成可靠评价。"
+          },
+          {
+            "condition": "has_defect与defects列表矛盾",
+            "reason": "有无缺陷标志与明细不一致，应检查视觉结果。"
+          }
+        ],
+        "interpretation_rules": [
+          "三种类别使用同一覆盖程度规则；不因类别为patch单独触发复核。",
+          "本评价仅依赖类别和面积比例，不以未提供的物理测量或置信度作为复核条件。",
+          "低中高表示图像覆盖程度，不表示结构损伤程度或服役风险。",
+          "不将不同类别的area_ratio相加；类别掩膜可能重叠。overall_area_ratio为并集比例，仅作展示，不用于本分类阈值。",
+          "所有条件文字用于规则说明，不是可直接执行的Python表达式。"
+        ],
+        "aggregation_rules": {
+          "recommendation": "先检查输入与规则有效性；任一项无效或需复核则总体REVIEW，否则任一类别FAIL则总体FAIL，否则总体PASS。",
+          "manual_review_required": "任一缺陷需要复核或输入与规则无效时为true，否则为false。",
+          "no_defect": "检测成功且has_defect=false、defects=[]、overall_area_ratio=0时，返回图像规则PASS，说明未检出目标类别，不能宣称产品完全无缺陷。"
+        },
+        "human_confirmation_required": true,
+        "confirmation_definition": "正式记录由质检员确认；常规确认不等于因证据问题触发的额外人工复核。"
+      },
+      "matched": true
+    }
+  ],
+  "ai_report": {
+    "ai_recommendation": "REVIEW",
+    "manual_review_required": true,
+    "manual_review_reason": "patch缺陷面积占比0.013263处于0.01至0.05的复核区间，需人工对照原图核对斑块类别与标记范围；scratch缺陷面积占比0.000202低于0.01，按规则为PASS。",
+    "defects": [
+      {
+        "defect_type": "patch",
+        "defect_level": "medium",
+        "area_ratio": 0.013263,
+        "description": "图像中的patch缺陷面积占比为0.013263，处于0.01至0.05区间，对应中等覆盖程度。",
+        "rule_basis": "quality-patch-002中的medium区间：0.01 <= area_ratio <= 0.05，决策为REVIEW且需人工复核。",
+        "recommended_action": "待人工复核，对照原图核实patch类别与标记范围。"
+      },
+      {
+        "defect_type": "scratch",
+        "defect_level": "low",
+        "area_ratio": 0.000202,
+        "description": "图像中的scratch缺陷面积占比为0.000202，低于0.01，对应低覆盖程度。",
+        "rule_basis": "quality-scratch-002中的low区间：0 < area_ratio < 0.01，决策为PASS。",
+        "recommended_action": "记录划伤位置和面积比例，保留图像评价建议。"
+      }
+    ],
+    "overall_recommended_action": "由于patch缺陷需人工复核，整体建议为REVIEW；scratch缺陷按规则通过。",
+    "warnings": [
+      "本评价仅基于图像面积占比，不表示整件钢材的产品合格认证。",
+      "位置框为类别预测像素的包围范围，不表示单个缺陷实例的数量或精确长度、宽度。",
+      "各类别规则独立使用，不将不同类别的area_ratio相加。"
+    ]
+  },
+  "human_review": {
+    "decision": "FAIL",
+    "comment": "块状过大"
+  }
+}

@@ -1,0 +1,124 @@
+{
+  "report_id": "6305ee62-98ff-4876-af43-9c06edb4bd18",
+  "created_at": "2026-09-08T10:17:08.784305",
+  "visual_result": {
+    "image_path": "C:\\Users\\diaow\\AppData\\Local\\Temp\\tmp9wx5w7ry.jpg",
+    "image_width": 3264,
+    "image_height": 1813,
+    "has_defect": true,
+    "overall_area_ratio": 0.013466,
+    "defects": [
+      {
+        "defect_type": "patch",
+        "class_id": 2,
+        "area_ratio": 0.013263,
+        "location": {
+          "bbox_pixels": {
+            "x_min": 1135,
+            "y_min": 652,
+            "x_max": 1976,
+            "y_max": 1168
+          }
+        }
+      },
+      {
+        "defect_type": "scratch",
+        "class_id": 3,
+        "area_ratio": 0.000202,
+        "location": {
+          "bbox_pixels": {
+            "x_min": 1084,
+            "y_min": 1034,
+            "x_max": 1555,
+            "y_max": 1118
+          }
+        }
+      }
+    ],
+    "model_name": "dseg-NEU-ResT-S-UPerHead"
+  },
+  "rag_entries": [
+    {
+      "defect_type": "patch",
+      "defect_knowledge": {
+        "name": "斑块",
+        "definition": "NEU-Seg中的连续片状或块状表面异常。",
+        "features": "通常具有不规则轮廓和局部灰度、纹理差异。",
+        "possible_causes": "可能与氧化、接触或加工导致的表面变化有关。",
+        "difference": "通常比夹杂连续，比划伤宽且方向性弱。"
+      },
+      "matched": true,
+      "quality_rule": {
+        "rule_id": "quality-patch-003",
+        "rule_version": "coverage-003",
+        "level": "medium",
+        "matched_interval": "1.00% ≤ 面积占比 ≤ 5.00%",
+        "recommendation": "REVIEW",
+        "manual_review_required": true,
+        "manual_review_reason": "面积处于1%至5%（含边界），需对照原图核对类别及标记范围。",
+        "action": "人工核对类别及标记范围，必要时更正或重新检测。"
+      }
+    },
+    {
+      "defect_type": "scratch",
+      "defect_knowledge": {
+        "name": "划伤",
+        "definition": "沿一定方向延伸的线状表面异常。",
+        "features": "通常细长，可呈单条或多条痕迹。",
+        "possible_causes": "可能与设备、搬运或加工中的机械摩擦有关。",
+        "difference": "通常比夹杂和斑块具有更明显的线性。"
+      },
+      "matched": true,
+      "quality_rule": {
+        "rule_id": "quality-scratch-003",
+        "rule_version": "coverage-003",
+        "level": "low",
+        "matched_interval": "0.00% < 面积占比 < 1.00%",
+        "recommendation": "PASS",
+        "manual_review_required": false,
+        "manual_review_reason": "",
+        "action": "记录类别、位置和面积比例。"
+      }
+    }
+  ],
+  "ai_report": {
+    "ai_recommendation": "REVIEW",
+    "manual_review_required": true,
+    "manual_review_reason": "patch：面积处于1%至5%（含边界），需对照原图核对类别及标记范围。",
+    "human_confirmation_required": true,
+    "evaluation_scope": "表面图像面积覆盖评价，不代表整件产品合格认证。",
+    "defects": [
+      {
+        "defect_type": "patch",
+        "defect_level": "medium",
+        "area_ratio": 0.013263,
+        "description": "斑块：按NEU-Seg定义，为连续片状或块状表面异常；知识库描述其通常具有不规则轮廓和局部灰度、纹理差异；可能成因包括氧化、接触或加工导致的表面变化（一般知识描述，非当前图像已确认事实）。",
+        "rule_basis": "依据quality-patch-003，面积占比1.3263%，命中1.00% ≤ 面积占比 ≤ 5.00%，等级为medium，建议REVIEW。",
+        "ai_recommendation": "REVIEW",
+        "manual_review_required": true,
+        "manual_review_reason": "面积处于1%至5%（含边界），需对照原图核对类别及标记范围。",
+        "recommended_action": "人工核对类别及标记范围，必要时更正或重新检测。"
+      },
+      {
+        "defect_type": "scratch",
+        "defect_level": "low",
+        "area_ratio": 0.000202,
+        "description": "划伤：按NEU-Seg定义，为沿一定方向延伸的线状表面异常；知识库描述其通常细长，可呈单条或多条痕迹；可能成因包括设备、搬运或加工中的机械摩擦（一般知识描述，非当前图像已确认事实）。",
+        "rule_basis": "依据quality-scratch-003，面积占比0.0202%，命中0.00% < 面积占比 < 1.00%，等级为low，建议PASS。",
+        "ai_recommendation": "PASS",
+        "manual_review_required": false,
+        "manual_review_reason": "",
+        "recommended_action": "记录类别、位置和面积比例。"
+      }
+    ],
+    "overall_recommended_action": "patch：人工核对类别及标记范围，必要时更正或重新检测。；scratch：记录类别、位置和面积比例。",
+    "warnings": [],
+    "validation": {
+      "corrected_defects": []
+    }
+  },
+  "human_review": {
+    "decision": "FAIL",
+    "comment": "大面积缺陷"
+  }
+}
